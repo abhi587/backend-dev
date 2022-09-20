@@ -125,22 +125,26 @@ const registerUser = async function (req, res) {
                 .send({ status: false, message: "password should be: 8 to 15 characters, at least one letter and one number " });
         }
 
-        if (!isValid(address.street)) {
-            return res
-                .status(400)
-                .send({ status: false, message: "invalid street" })
-        }
+        if (address) {
 
-        if (!isValid(address.city) || !isNameValid(address.city)) {
-            return res
-                .status(400)
-                .send({ status: false, message: "invalid city" });
-        }
+            if (!isValid(address.street)) {
+                return res
+                    .status(400)
+                    .send({ status: false, message: "invalid city" })
+            }
 
-        if (! /^\+?([1-9]{1})\)?([0-9]{5})$/.test(address.pincode)) {
-            return res
-                .status(400)
-                .send({ status: false, message: "invalid pin" })
+            if (!isValid(address.city) || !isNameValid(address.city)) {
+                return res
+                    .status(400)
+                    .send({ status: false, message: "invalid city" });
+            }
+
+            if (! /^\+?([1-9]{1})\)?([0-9]{5})$/.test(address.pincode)) {
+                return res
+                    .status(400)
+                    .send({ status: false, message: "invalid pin" })
+            }
+
         }
 
 
@@ -176,7 +180,7 @@ const registerUser = async function (req, res) {
 const userLogin = async function (req, res) {
 
     try {
-        
+
         const requestBody = req.body;
         const queryParams = req.query;
 
