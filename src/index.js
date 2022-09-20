@@ -3,20 +3,18 @@ const bodyParser = require('body-parser');
 // const multer = require('multer');
 const route = require('./routes/route');
 const { default: mongoose } = require('mongoose');
-const connection = require("./db");
 const app = express();
-require('dotenv').config();
 
 app.use(bodyParser.json());
 // app.use(multer().any())
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
+mongoose.connect("mongodb+srv://abhishekprasad:abhiprasad@cluster0.ygncry8.mongodb.net/group18Database",
+ { useNewUrlParser: true})
 
-
-// database connection
-connection();
-
+.then( () => console.log("MongoDb is connected"))
+.catch ( err => console.log(err) )
 
 
 app.use('/', route)
