@@ -110,7 +110,7 @@ const registerUser = async function (req, res) {
                     .send({ status: false, message: "invalid city" })
             }
 
-            if (!isValid(address.city) || !isNameValid(address.city)) {
+            if (!isValid(address.city) && !isNameValid(address.city)) {
                 return res
                     .status(400)
                     .send({ status: false, message: "invalid city" });

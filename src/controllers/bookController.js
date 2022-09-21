@@ -341,12 +341,13 @@ const getBookDetails = async function (req, res) {
         .status(400)
         .send({ status: false, message: `enter a valid bookId` });
     }
+    
     // used .lean to  convert mongoose object to plain javaScript object
     const bookByBookId = await BookModel.findOne({
       _id: bookId,
       isDeleted: false,
       deletedAt: null,
-    });
+    }); //.lean()
 
     if (!bookByBookId) {
       return res
