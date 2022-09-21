@@ -3,28 +3,7 @@ const UserModel = require('../models/userModel')
 const moment = require("moment");
 const ReviewModel = require('../models/reviewModel');
 const { default: mongoose } = require('mongoose');
-
-
-//**************************VALIDATION FUNCTION*******************/
-
-const isValid = function (value) {
-  if (typeof value == "undefined" || value == null) return false;
-  if (typeof value == "string" && value.trim().length > 0) return true;
-};
-
-const isValidRequestBody = function (object) {
-  return Object.keys(object).length > 0;
-};
-
-const isValidIdType = function (objectId) {
-  return mongoose.Types.ObjectId.isValid(objectId)
-};
-
-const isValidSubcategory = function (value) {
-  if (typeof value == "undefined" || value == null) return false;
-  if (typeof value == "string" && value.trim().length > 0) return true;
-  if (typeof value == "object" && Array.isArray(value) == true) return true;
-};
+const{ isValid,isValidRequestBody,isValidIdType,isValidSubcategory} = require("../validation/validation")
 
 
 //************************************NEW BOOK REGISTRATION*************************/
