@@ -3,7 +3,7 @@ const UserModel = require('../models/userModel')
 const moment = require("moment");
 const ReviewModel = require('../models/reviewModel');
 const { default: mongoose } = require('mongoose');
-const{ isValid,isValidRequestBody,isValidIdType,isValidSubcategory} = require("../validation/validation")
+const { isValid, isValidRequestBody, isValidIdType, isValidSubcategory } = require("../validation/validation")
 
 
 //************************************NEW BOOK REGISTRATION*************************/
@@ -360,7 +360,7 @@ const getBookDetails = async function (req, res) {
     });
 
     // adding a new property inside book and assigning it to allReviews array
-    bookByBookId.reviewsData = allReviewsOfThisBook;
+    bookByBookId._doc["reviewsData"] = allReviewsOfThisBook;
 
     res
       .status(200)
