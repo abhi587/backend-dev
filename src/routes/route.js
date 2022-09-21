@@ -14,10 +14,21 @@ router.get('/test-me',  function(req, res){
 
 //************************************USER****************************************** */    
 
-
 // new user register and user login
 router.post('/register', UserController.registerUser)
 router.get('/login', UserController.userLogin)
+
+
+//*************************************BOOK********************************************* */
+
+// new book registration
+router.post('/books', MiddleWares.authentication ,  BookController.registerBook )
+
+// get list of all books 
+router.get('/books' , MiddleWares.authentication , BookController.booksList)
+
+// get one book details including reviewData
+router.get('/books/:bookId', MiddleWares.authentication, BookController.getBookDetails)
 
 
 

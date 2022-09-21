@@ -139,7 +139,7 @@ const registerUser = async function (req, res) {
                     .send({ status: false, message: "invalid city" });
             }
 
-            if (! /^\+?([1-9]{1})\)?([0-9]{5})$/.test(address.pincode)) {
+            if (! /^\+?([1-9]{1})\)?([0-9]{5})$/.test(address.pincode) && !isValid(address.pincode)) {
                 return res
                     .status(400)
                     .send({ status: false, message: "invalid pin" })
