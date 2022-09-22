@@ -3,7 +3,7 @@ const UserModel = require('../models/userModel')
 const moment = require("moment");
 const ReviewModel = require('../models/reviewModel');
 const { default: mongoose } = require('mongoose');
-const { isValid, isValidRequestBody, isValidIdType, isValidSubcategory } = require("../validation/validation")
+const { isValid, isValidRequestBody, isValidIdType } = require("../validation/validation")
 
 
 //************************************NEW BOOK REGISTRATION*************************/
@@ -93,7 +93,7 @@ const registerBook = async function (req, res) {
     }
 
     // checking ISBN format
-    if (!/^(97(8|9))?\d{9}(\d|X)$/.test(ISBN)) {
+    if (!/^(97(8|9))?\d{9}(\d|X)$/.test(ISBN.split("-").join(""))) {
       return res
         .status(400)
         .send({ status: false, message: `enter a valid ISBN of 13 digits` });
@@ -118,20 +118,7 @@ const registerBook = async function (req, res) {
         .send({ status: false, message: `category is required and should be in valid format` });
     }
 
-    // if subcategory is an array then validating each element
-    if (Array.isArray(subcategory)) {
-      for (let i = 0; i < subcategory.length; i++) {
-        element = subcategory[i];
-        if (!isValid(element)) {
-          return res
-            .status(400)
-            .send({ status: false, message: `subcategory is required and should be in valid format` });
-        }
-      }
-    }
-
-    // if subcategory is not an array then validating that
-    if (!isValidSubcategory(subcategory)) {
+    if (!isValid(subcategory)) {
       return res
         .status(400)
         .send({ status: false, message: `subcategory is required and should be in valid format` });
@@ -231,7 +218,9 @@ const booksList = async function (req, res) {
 
       if (queryParams.hasOwnProperty("category")) {
         if (isValid(category)) {
+
           filterConditions["category"] = category.trim();
+
         } else {
           return res
             .status(400)
@@ -240,7 +229,7 @@ const booksList = async function (req, res) {
       }
 
       if (queryParams.hasOwnProperty("subcategory")) {
-        if (isValidSubcategory(subcategory)) {
+        if (isValid(subcategory)) {
 
           filterConditions["subcategory"] = subcategory;
 
@@ -341,7 +330,7 @@ const getBookDetails = async function (req, res) {
         .status(400)
         .send({ status: false, message: `enter a valid bookId` });
     }
-    
+
     // used .lean to  convert mongoose object to plain javaScript object
     const bookByBookId = await BookModel.findOne({
       _id: bookId,
@@ -374,11 +363,204 @@ const getBookDetails = async function (req, res) {
   }
 };
 
+//*****************************************UPDATING A BOOK*********************************************** */
 
+const updateBooks = async function (req, res) {
+  try {
+    const requestBody = req.body;
+    const queryParam = req.query;
+    const bookId = req.params.bookId;
 
+    // query params should be empty
+    if (isValidRequestBody(queryParam)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "invalid request" });
+    }
+
+    if (!isValidRequestBody(requestBody)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "input data is required for update" });
+    }
+
+    if (!bookId) {
+      return res
+        .status(400)
+        .send({ status: false, message: "bookId is required in path params" });
+    }
+
+    // using destructuring
+    const { title, excerpt, releasedAt, ISBN } = requestBody;
+
+    // creating an empty object for adding all updates as per requestBody
+    const updates = {};
+
+    // if requestBody has the mentioned property then validating that property and adding it to updates object
+    if (requestBody.hasOwnProperty("title")) {
+
+      if (isValid(title)) {
+        const isTitleUnique = await BookModel.findOne({
+          title: title.trim(),
+          isDeleted: false,
+          deletedAt: null,
+        });
+
+        if (isTitleUnique) {
+          return res
+            .status(400)
+            .send({ status: false, message: " Book title already exist. It should be unique " });
+        }
+
+        updates["title"] = title.trim();
+
+      } else {
+        return res
+          .status(400)
+          .send({ status: false, message: `enter book title in valid format` });
+      }
+    }
+
+    if (requestBody.hasOwnProperty("excerpt")) {
+
+      if (isValid(excerpt)) {
+        updates["excerpt"] = excerpt.trim();
+
+      } else {
+        return res
+          .status(400)
+          .send({ status: false, message: "enter book excerpt in valid format" });
+      }
+    }
+
+    if (requestBody.hasOwnProperty("releasedAt")) {
+
+      if (isValid(releasedAt)) {
+        if (!/^[0-9]{4}[-]{1}[0-9]{2}[-]{1}[0-9]{2}/.test(releasedAt)) {
+          return res
+            .status(400)
+            .send({ status: false, message: `released date format should be YYYY-MM-DD` });
+        }
+
+        if (moment(releasedAt).isValid() == false) {
+          return res
+            .status(400)
+            .send({ status: false, message: "enter a valid released date" });
+        }
+
+        updates["releasedAt"] = releasedAt;
+
+      } else {
+        return res
+          .status(400)
+          .send({ status: false, message: "enter released date in valid format YYYY-MM-DD" });
+      }
+    }
+
+    if (requestBody.hasOwnProperty("ISBN")) {
+      if (isValid(ISBN)) {
+        if (!/^(97(8|9))?\d{9}(\d|X)$/.test(ISBN.split("-").join(""))) {
+          return res
+            .status(400)
+            .send({ status: false, message: `enter a valid ISBN of 13 digits` });
+        }
+
+        const isUniqueISBN = await BookModel.findOne({
+          ISBN: ISBN,
+          isDeleted: false,
+          deletedAt: null,
+        });
+
+        if (isUniqueISBN) {
+          return res
+            .status(400)
+            .send({ status: false, message: `ISBN already exist` });
+        }
+
+        updates["ISBN"] = ISBN.trim();
+
+      } else {
+        return res
+          .status(400)
+          .send({ status: false, message: "use proper format for ISBN" });
+      }
+    }
+
+    // updating book by the content inside updates object
+    const updatedBookDetails = await BookModel.findOneAndUpdate(
+      { _id: bookId, isDeleted: false, deletedAt: null },
+      { $set: updates },
+      { new: true }
+    );
+
+    res
+      .status(200)
+      .send({ status: true, message: "book details update successfully", data: updatedBookDetails });
+
+  } catch (err) {
+
+    res.status(500).send({ error: err.message });
+
+  }
+};
+
+//******************************************DELETING A BOOK***************************************************** */
+
+const deleteBook = async function (req, res) {
+
+  try {
+
+    const queryParam = req.query;
+    const requestBody = req.body;
+    const bookId = req.params.bookId;
+
+    // query params should be empty
+    if (isValidRequestBody(queryParam)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "invalid request" });
+    }
+
+    if (isValidRequestBody(requestBody)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "input data is not required in request body" });
+    }
+
+    if (!bookId) {
+      return res
+        .status(400)
+        .send({ status: false, message: "bookId is required in path params" });
+    }
+
+    const markDirtyBook = await BookModel.findByIdAndUpdate(
+      bookId,
+      { $set: { isDeleted: true, deletedAt: Date.now() } },
+      { new: true }
+    );
+
+    const markDirtyAllReviewsOfThisBook = await ReviewModel.updateMany(
+      { bookId: bookId, isDeleted: false },
+      { $set: { isDeleted: true } },
+      { new: true }
+    );
+
+    res
+      .status(200)
+      .send({ status: true, message: "book deleted successfully" });
+
+  } catch (err) {
+
+    res.status(500).send({ error: err.message });
+
+  }
+};
 
 //**********************************EXPORTING ALL HANDLERS FUNCTIONS************************************* */
 
 module.exports.registerBook = registerBook;
 module.exports.booksList = booksList;
 module.exports.getBookDetails = getBookDetails;
+module.exports.updateBooks = updateBooks;
+module.exports.deleteBook = deleteBook;
+

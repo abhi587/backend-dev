@@ -30,6 +30,11 @@ router.get('/books' , MiddleWares.authentication , BookController.booksList)
 // get one book details including reviewData
 router.get('/books/:bookId', MiddleWares.authentication, BookController.getBookDetails)
 
+// update book details
+router.put('/books/:bookId', MiddleWares.authentication, MiddleWares.authorization, BookController.updateBooks)
+
+// delete book
+router.delete('/books/:bookId', MiddleWares.authentication, MiddleWares.authorization, BookController.deleteBook)
 
 
 module.exports = router
