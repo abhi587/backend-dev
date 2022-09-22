@@ -218,7 +218,7 @@ const userLogin = async function (req, res) {
         const secretKey = "project3group21";
 
         // creating JWT
-        const token = jwt.sign(payLoad, secretKey, { expiresIn: "500s" });
+        const token = jwt.sign(payLoad, secretKey, { expiresIn: "5000s" });
 
         res.header("x-api-key", token);
 
