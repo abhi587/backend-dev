@@ -336,7 +336,7 @@ const getBookDetails = async function (req, res) {
       _id: bookId,
       isDeleted: false,
       deletedAt: null,
-    }); //.lean()
+    }).lean();
 
     if (!bookByBookId) {
       return res
@@ -350,7 +350,7 @@ const getBookDetails = async function (req, res) {
     });
 
     // adding a new property inside book and assigning it to allReviews array
-    bookByBookId._doc["reviewsData"] = allReviewsOfThisBook;
+    bookByBookId["reviewsData"] = allReviewsOfThisBook;     //we can use bookBybookId._doc["reviewsData"] that will do the same work as .lean()
 
     res
       .status(200)
