@@ -34,6 +34,13 @@ const isValidEmail = function (email) {
   return regexForEmail.test(email);
 };
 
+const isValidRating = function(value){
+  if(typeof (value) == 'undefined' || value == null) return false
+  if(typeof (value) != 'number') return false
+  if(value < 1 || value > 5) return false
+  return true
+}
+
 module.exports = {
   isValid,
   isValidIdType,
@@ -41,5 +48,6 @@ module.exports = {
   isValidSubcategory,
   isNameValid,
   isValidPhone,
-  isValidEmail
+  isValidEmail,
+  isValidRating
 }
