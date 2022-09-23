@@ -42,7 +42,7 @@ const newReview = async function (req, res) {
 
         if (!bookBybookId) {
             return res
-                .status(400)
+                .status(404)
                 .send({ status: false, message: `no book found by ${bookId}` });
         }
 
@@ -108,7 +108,7 @@ const newReview = async function (req, res) {
         book.reviewData = allReviewsOfThisBook
 
         res
-            .status(400)
+            .status(201)
             .send({ status: true, message: "review added successfully", data: book })
 
     } catch (error) {
@@ -179,7 +179,7 @@ const updateReview = async function (req, res) {
 
         if (!reviewByReviewId) {
             return res
-                .status(400)
+                .status(404)
                 .send({ status: false, message: `No review found by ${reviewId}` });
         }
 
@@ -304,7 +304,7 @@ const deleteReview = async function (req, res) {
 
         if (!reviewByReviewId) {
             return res
-                .status(400)
+                .status(404)
                 .send({ status: false, message: `No review found by ${reviewId}` });
         }
 
