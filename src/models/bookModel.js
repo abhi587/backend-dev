@@ -54,7 +54,10 @@ const bookSchema = new mongoose.Schema({
             type     : Date,
             required : [true, "book releasing Date must be provided"],    
             trim     : true 
-        }  
+        },
+        bookCover:{
+            type     : String
+        }    
 
 }, {timestamps: true})
 

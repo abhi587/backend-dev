@@ -16,7 +16,7 @@ router.get('/test-me',  function(req, res){
 
 // new user register and user login
 router.post('/register', UserController.registerUser)
-router.get('/login', UserController.userLogin)
+router.post('/login', UserController.userLogin)
 
 
 //*************************************BOOK********************************************* */

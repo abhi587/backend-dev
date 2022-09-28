@@ -4,6 +4,39 @@ const moment = require("moment");
 const ReviewModel = require('../models/reviewModel');
 const { default: mongoose } = require('mongoose');
 const { isValid, isValidRequestBody, isValidIdType } = require("../validation/validation")
+const AWS = require('aws-sdk')
+
+
+//**************************************FILE UPLOAD TO AWS S3************************************************ */
+
+AWS.config.update({
+  accessKeyId : "AKIAY3L35MCRZNIRGT6N",
+  secretAccessKey : "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",
+  region : "ap-south-1"
+})
+
+const uploadFile = async (file) => {
+  return new Promise(function(resolve, reject){
+
+    const s3 = new AWS.S3({appVersion : '2006-03-01'})
+
+    const uploadParams = {
+      ACL : "public-read",
+      Bucket : "classroom-training-bucket",
+      Key : "abc-aws/" + file.originalname,
+      Body : file.buffer
+    }
+
+    s3.upload(uploadParams, function(err, data){
+
+      if(err) return reject ({error : err})
+      console.log(" file uploaded succesfully ")
+      return resolve(data.Location)
+    })
+
+  }
+  )}
+
 
 
 //************************************NEW BOOK REGISTRATION*************************/
@@ -15,6 +48,16 @@ const registerBook = async function (req, res) {
     const requestBody = req.body;
     const queryParams = req.query;
     const decodedToken = req.decodedToken;
+    const files = req.files
+    console.log(files)
+
+    if(!files || files.length == 0){
+      return res.status(400).send({status : false, message : "no file found"})
+    }
+
+      const uploadedFileUrl = await uploadFile(files[0])
+
+
 
     //  query params should be empty
     if (isValidRequestBody(queryParams)) {
@@ -157,6 +200,7 @@ const registerBook = async function (req, res) {
       isDeleted: false,
       reviews: 0,
       deletedAt: null,
+      bookCover : uploadedFileUrl
     };
 
     const newBook = await BookModel.create(bookData);
