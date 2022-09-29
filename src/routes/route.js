@@ -13,6 +13,10 @@ router.get('/test', function(req, res){
 router.post('/url/shorten', UrlController.urlShortener )
 
 
+// API for redirecting to original url
+router.get('/:urlCode', UrlController.getUrl)
+
+
 router.all("/**", function (req,res){
     res
         .status(404)

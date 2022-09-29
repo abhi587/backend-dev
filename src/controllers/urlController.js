@@ -1,4 +1,3 @@
-const UrlModel = require("../models/urlModel");
 const ShortId = require("shortid");
 const urlModel = require("../models/urlModel");
 
@@ -112,6 +111,62 @@ const urlShortener = async function (req, res) {
 }
 
 
+//****************************************GET URL****************************************************** */
+
+const getUrl = async function (req, res) {
+
+    const requestBody = req.body;
+    const queryParams = req.query;
+
+    try {
+
+        // query params must be empty
+        if (isValidRequest(queryParams)) {
+            return res
+                .status(400)
+                .send({ status: false, message: "invalid request" });
+        }
+
+        if (isValidRequest(requestBody)) {
+            return res
+                .status(400)
+                .send({ status: false, message: " input data is not required" });
+        }
+
+        const urlCode = req.params.urlCode;
+
+        if (!/^(?=.*[a-zA-Z].*)[a-zA-Z\d!@#-_$%&*]{8,}$/.test(urlCode)) {
+            return res
+                .status(400)
+                .send({ status: false, message: " enter a valid urlCode" });
+        }
+
+        const urlData = await urlModel.findOne({ urlCode });
+
+        if (urlData)
+            return res
+                .status(302)
+                .redirect(urlData.longUrl);
+
+
+        if (!urlData) {
+            return res
+                .status(404)
+                .send({ status: false, message: "no such url exist" });
+        }
+
+
+    } catch (error) {
+
+        res
+            .status(500)
+            .send({ error: error.message });
+
+    }
+};
+
+
+
 //**********************************EXPORTING BOTH HANDLERS************************************************/
 
-module.exports = { urlShortener };
+module.exports = { urlShortener, getUrl };
