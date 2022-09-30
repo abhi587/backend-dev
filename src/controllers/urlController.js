@@ -143,18 +143,17 @@ const getUrl = async function (req, res) {
 
         const urlData = await urlModel.findOne({ urlCode });
 
-        if (urlData)
-            return res
-                .status(302)
-                .redirect(urlData.longUrl);
-
-
         if (!urlData) {
             return res
                 .status(404)
                 .send({ status: false, message: "no such url exist" });
         }
 
+        if (urlData){
+            return res
+                .status(302)
+                .redirect(urlData.longUrl);
+        }
 
     } catch (error) {
 
