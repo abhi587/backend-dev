@@ -1,5 +1,7 @@
 const ShortId = require("shortid");
-const urlModel = require("../models/urlModel");
+const UrlModel = require("../models/urlModel");
+const redis = require("redis");
+const { promisify } = require("util");
 
 
 //********************************************VALIDATION FUNCTIONS********************************************************** */
@@ -20,6 +22,33 @@ const isValidUrl = function (value) {
         /(:?^((https|http|HTTP|HTTPS){1}:\/\/)(([w]{3})[\.]{1})?([a-zA-Z0-9]{1,}[\.])[\w]*((\/){1}([\w@?^=%&amp;~+#-_.]+))*)$/;
     return regexForUrl.test(value);
 };
+
+
+//****************************************CONNECT TO REDIS******************************* */
+//Connect to redis
+const redisClient = redis.createClient(
+    14060,
+    "redis-14060.c301.ap-south-1-1.ec2.cloud.redislabs.com",
+    { no_ready_check: true }
+  );
+  redisClient.auth("2Z74rl0SGNvlPsnV91B7LVJM5xm19C3i", function (err) {
+    if (err) throw err;
+  });
+  
+  redisClient.on("connect", async function () {
+    console.log("Connected to Redis..");
+  });
+  
+  
+  
+  //1. connect to the server
+  //2. use the commands :
+  
+  //Connection setup for redis
+  
+  const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
+  const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
+  
 
 //**********************************URL SHORTENER*************************************/
 
@@ -66,13 +95,14 @@ const urlShortener = async function (req, res) {
     try {
 
         //first lets check in our dataBase
-        const urlDataFromDB = await urlModel.findOne({ longUrl }).select({
+        const urlDataFromDB = await UrlModel.findOne({ longUrl }).select({
             shortUrl: 1,
             longUrl: 1,
             urlCode: 1,
             _id: 0
         });
 
+        //if url is present in DB
         if (urlDataFromDB) {
 
             return res
@@ -92,7 +122,8 @@ const urlShortener = async function (req, res) {
                 shortUrl: shortUrl,
             };
 
-            const newUrl = await urlModel.create(urlData);
+            // creating url data inside DB and setting same data to cache memory
+            const newUrl = await UrlModel.create(urlData);
 
             return res
                 .status(201)
@@ -113,7 +144,7 @@ const urlShortener = async function (req, res) {
 
 //****************************************GET URL****************************************************** */
 
-const getUrl = async function (req, res) {
+const getUrl = async function(req, res) {
 
     const requestBody = req.body;
     const queryParams = req.query;
@@ -141,25 +172,40 @@ const getUrl = async function (req, res) {
                 .send({ status: false, message: " enter a valid urlCode" });
         }
 
-        const urlData = await urlModel.findOne({ urlCode });
+        // First lets check inside cache memory
+        const urlDataFromCache = await GET_ASYNC(urlCode);
 
-        if (!urlData) {
-            return res
-                .status(404)
-                .send({ status: false, message: "no such url exist" });
-        }
+        if (urlDataFromCache) {
 
-        if (urlData){
             return res
                 .status(302)
-                .redirect(urlData.longUrl);
+                .redirect(urlDataFromCache);
+
+        } else {
+
+            // If cache miss, lets check in our DB, if available then populate the cache
+            const urlDataByUrlCode = await UrlModel.findOne({ urlCode });
+
+            if (!urlDataByUrlCode) {
+                return res
+                    .status(404)
+                    .send({ status: false, message: "no such url exist" });
+            }
+
+            const addingUrlDataInCache = SET_ASYNC(
+                urlCode,
+                urlDataByUrlCode.longUrl
+            );
+
+            // if we found the document by urlCode then redirecting the user to original url
+            return res
+                .status(302)
+                .redirect(urlDataByUrlCode.longUrl);
         }
 
     } catch (error) {
 
-        res
-            .status(500)
-            .send({ error: error.message });
+        res.status(500).send({ error: error.message });
 
     }
 };
