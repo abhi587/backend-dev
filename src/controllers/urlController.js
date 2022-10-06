@@ -38,13 +38,7 @@ const redisClient = redis.createClient(
   redisClient.on("connect", async function () {
     console.log("Connected to Redis..");
   });
-  
-  
-  
-  //1. connect to the server
-  //2. use the commands :
-  
-  //Connection setup for redis
+
   
   const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
   const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
@@ -193,8 +187,7 @@ const getUrl = async function(req, res) {
             }
 
             const addingUrlDataInCache = SET_ASYNC(
-                urlCode,
-                urlDataByUrlCode.longUrl
+                urlCode
             );
 
             // if we found the document by urlCode then redirecting the user to original url
